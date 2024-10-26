@@ -3,7 +3,7 @@ import dotenv from "dotenv"
 import {app} from "./app.js"
 
 dotenv.config({
-    path:'./env'
+    path:'./.env'
 })
 
 connectDB()
@@ -12,9 +12,6 @@ connectDB()
         console.log(`Server is listening from port : ${process.env.PORT}`)
     })
 
-    app.on("error in app" , (err)=>{
-        console.log("error" , err);
-    })
 })
 .catch((err)=>{
     console.log("Mongodb connection  failed !!! " , err)
