@@ -1,7 +1,7 @@
 import {asyncHandler} from "../utils/asyncHandler.js"
 import{ApiError} from "../utils/ApiError.js"
 import {User} from "../models/user.model.js"
-import {uploadOnCloudinary} from "../utils/cloudinary.js"
+import {uploadOnCloudinary , deleteImageByUrl} from "../utils/cloudinary.js"
 import {ApiResponse} from "../utils/ApiResponse.js"
 import  jwt  from "jsonwebtoken"
 import mongoose from "mongoose"
@@ -170,8 +170,8 @@ const logoutUser = asyncHandler(async (req , res)=>{
       await User.findByIdAndUpdate(
          req.user._id,
          {
-            $set:{
-               refreshToken:undefined
+            $unset:{
+               refreshToken:1 // this removes the field from document
             }
          },{
             new:true
@@ -192,9 +192,10 @@ const logoutUser = asyncHandler(async (req , res)=>{
 
 const refreshAccessToken = asyncHandler(async (req , res)=>{
 
- const incomingRefreshToken =   req.cookie.refreshToken || req.body.refreshToken
+   const incomingRefreshToken = req.cookies.RefreshToken || req.body.refreshToken
 
  if(!incomingRefreshToken){
+
    throw new ApiError(401 ,  "unauthorized refresh token")
  }
 
@@ -269,7 +270,7 @@ const changeCurrentPassword = asyncHandler(async (req , res)=>{
 const getCurrentUser = asyncHandler(async (req , res)=>{
    return res
    .status(200)
-   .json(200 , req.user , "current user fetched")
+   .json( new ApiResponse (200 , req.user , "current user fetched"))
 })
 
 
@@ -306,6 +307,13 @@ const updateUserAvatar = asyncHandler(async(req , res)=>{
       throw new ApiError(400 , "Avatar file is missing")
    }
 
+   
+  const deleteAvatar = await deleteImageByUrl(req.user.avatar);
+
+      if(!deleteAvatar){
+         throw new ApiError(400 , "avatar is not deleted")
+      }
+
   const avatar =  await uploadOnCloudinary(avatarLocalPath)
 
    if(!avatar.url){
@@ -324,7 +332,6 @@ const updateUserAvatar = asyncHandler(async(req , res)=>{
    ).select("-password")
 
    // delete old avatar image 
-
 
    return res
       .status(200)
