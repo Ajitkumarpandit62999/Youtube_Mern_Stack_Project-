@@ -57,12 +57,48 @@ const createTweet = asyncHandler(async (req, res) => {
   });
 
   
-const updateTweet = asyncHandler(async (req, res) => {
+  const updateTweet = asyncHandler(async (req, res) => {
     //TODO: update tweet
-})
+    const  {tweetId}  = req.body
+    console.log(tweetId);
+    
+    if (!tweetId) throw new ApiError(404, "Invalid Tweet Link");
+  
+    const updatedTweet = await Tweet.findByIdAndUpdate(
+      tweetId,
+      {
+        $set: {
+          content: req.body.content,
+        },
+      },
+      {
+        new: true,
+      }
+    );
+    if (!updatedTweet) throw new ApiError(400, "Could not update tweet");
+  
+    return res
+      .status(200)
+      .json(new ApiResponse(200, updatedTweet, "Tweet updated successfully!"));
+  });
 
 const deleteTweet = asyncHandler(async (req, res) => {
     //TODO: delete tweet
+    const { tweetId } = req.params;
+    console.log(tweetId);
+    
+    if (!tweetId) throw new ApiError(404, "Invalid Tweet Link");
+
+    const deletedTweet = await Tweet.findByIdAndDelete(tweetId)
+
+    if (!deletedTweet) {
+      throw new ApiError(500 , "internal server erorr can,t delete this tweet")
+    }
+
+    return res
+    .status(200)
+    .json(new ApiResponse(200 , deletedTweet , "Tweet deleted successfully"))
+
 })
 
 export {
