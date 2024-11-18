@@ -1,7 +1,7 @@
 import {asyncHandler} from "../utils/asyncHandler.js"
 import{ApiError} from "../utils/ApiError.js"
 import {User} from "../models/user.model.js"
-import {uploadOnCloudinary , deleteImageByUrl} from "../utils/cloudinary.js"
+import {uploadOnCloudinary , deleteOnCloudinary} from "../utils/cloudinary.js"
 import {ApiResponse} from "../utils/ApiResponse.js"
 import  jwt  from "jsonwebtoken"
 import mongoose from "mongoose"
@@ -308,7 +308,7 @@ const updateUserAvatar = asyncHandler(async(req , res)=>{
    }
 
    
-  const deleteAvatar = await deleteImageByUrl(req.user.avatar);
+  const deleteAvatar = await deleteOnCloudinary(req.user.avatar);
 
       if(!deleteAvatar){
          throw new ApiError(400 , "avatar is not deleted")

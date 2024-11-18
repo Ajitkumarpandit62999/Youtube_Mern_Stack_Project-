@@ -29,7 +29,7 @@ const uploadOnCloudinary = async (localFilePath) => {
     }
 }
 
-const deleteImageByUrl = async (imageUrl) => {
+const deleteOnCloudinary = async (imageUrl) => {
     // Extract the public ID from the image URL
     const publicId = imageUrl.split('/').slice(-1)[0].split('.')[0];
   
@@ -46,4 +46,4 @@ const deleteImageByUrl = async (imageUrl) => {
   };
 
   
-export {uploadOnCloudinary , deleteImageByUrl }
+export {uploadOnCloudinary , deleteOnCloudinary }
