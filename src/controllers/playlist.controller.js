@@ -164,6 +164,36 @@ const addVideoToPlaylist = asyncHandler(async (req, res) => {
 const removeVideoFromPlaylist = asyncHandler(async (req, res) => {
     const {playlistId, videoId} = req.params
     // TODO: remove video from playlist
+    if (!playlistId || !videoId)
+        throw new ApiError(404, "Playlist ID or Video ID is missing");
+    
+    if (!videoId) throw new ApiError(404, "Requested video not found");
+
+    if (!playlistId) throw new ApiError(404, "Playlist not found");
+
+    const videoRemovedPlaylist = await PlayList.findByIdAndUpdate(
+        playlistId,
+        {
+          $pull: {
+            playListVideos: new mongoose.Types.ObjectId(videoId),
+          },
+        },
+        {
+          new: true,
+        }
+      );
+
+    return res.status(200).json(
+        new ApiResponse(
+          200,
+          {
+            "Video Deleted to the playlist: ": videoRemovedPlaylist,
+          },
+          "Video removed to the playlist successfully!"
+        )
+      );
+
+
 
 })
 
@@ -190,6 +220,29 @@ const updatePlaylist = asyncHandler(async (req, res) => {
     const {playlistId} = req.params
     const {name, description} = req.body
     //TODO: update playlist
+       if(!playlistId) throw new ApiError(400 , "Inavlid link")
+       if(!name || !description) throw new ApiError(400 , "please send name and description")
+    const updatePlaylistDetails = await PlayList.findByIdAndUpdate(playlistId ,
+         {
+            $set:{
+                name:name,
+                description:description
+            }
+         },
+         {
+            new:true
+         }
+        
+    );
+
+    if (!updatePlaylistDetails) {
+        throw new ApiError(500 , "Internal server error cant update details")
+    }
+
+    return res
+    .status(200)
+    .json(new ApiResponse(200 , updatePlaylistDetails , "playlist updated succesfully"))
+
 })
 
 export {
