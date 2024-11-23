@@ -1,15 +1,52 @@
 import mongoose, {isValidObjectId} from "mongoose"
-import {Like} from "../models/like.model.js"
+import {Like} from "../models/like.modal.js"
 import {ApiError} from "../utils/ApiError.js"
 import {ApiResponse} from "../utils/ApiResponse.js"
 import {asyncHandler} from "../utils/asyncHandler.js"
+import {Video} from "../models/video.model.js"
+
 
 const toggleVideoLike = asyncHandler(async (req, res) => {
     const {videoId} = req.params
+    let message
     //TODO: toggle like on video
     if (!videoId) {
-        
+        throw new ApiError(400 , "Invalid Link")
     }
+    const fetchedVideo = await Video.findById(videoId);
+    if (!fetchedVideo) throw new ApiError(404, "Video not found");
+
+    const isLikedToVideo = await Like.findOne(
+        {
+         likedBy: req.user._id,
+         video: new mongoose.Types.ObjectId(videoId),
+        },
+        {
+          new: true,
+        }
+      );
+
+      if (isLikedToVideo) {
+        await Like.findByIdAndDelete(isLikedToVideo._id);
+        message = "Video unliked successfully";
+      }
+
+       else {
+        const LikedToVideo = await Like.create({
+          likedBy: req.user._id,
+          video: new mongoose.Types.ObjectId(videoId),  
+     });
+
+     if (!LikedToVideo) throw new ApiError(500, "Failed to like video");
+
+     message = "Video liked successfully";
+
+    }
+
+  return res
+  .status(200)
+  .json(new ApiResponse (200 ,fetchedVideo , message ))
+
 })
 
 const toggleCommentLike = asyncHandler(async (req, res) => {

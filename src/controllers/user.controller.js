@@ -5,6 +5,7 @@ import {uploadOnCloudinary , deleteOnCloudinary} from "../utils/cloudinary.js"
 import {ApiResponse} from "../utils/ApiResponse.js"
 import  jwt  from "jsonwebtoken"
 import mongoose from "mongoose"
+import { json } from "express"
 
 
 
@@ -21,6 +22,22 @@ const generateAccessTokenAndRefreshTokens = async(userId)=>{
       throw new ApiError(500 , "something went wrong while generating AccessToken And RefreshTokens")
    }
 }
+
+const getAllUsers = asyncHandler(async (req, res) => {
+   const users = await User.find().select("-password -refreshToken"); // Exclude sensitive fields
+   if (!users || users.length === 0) {
+     throw new ApiError(404, "No users found");
+   }
+ 
+   return res.status(200).json(
+     new ApiResponse(
+       200,
+       users,
+       "Users fetched successfully"
+     )
+   );
+ });
+
 
 const registerUser = asyncHandler(async (req , res)=>{
    // get user details from frontend
@@ -119,7 +136,6 @@ const loginUser =  asyncHandler(async (req , res)=>{
    // send cookies to the user 
 
    const { email , username , password} = req.body
-   console.log(username);
 
    if(!(username || email)){
       throw new ApiError(400 , "username or password is required")
@@ -506,4 +522,4 @@ const getWatchHistory = asyncHandler(async (req , res)=>{
 
 
 export {registerUser, loginUser, logoutUser, refreshAccessToken,  updateAccountDetails, changeCurrentPassword, getCurrentUser ,updateUserAvatar ,
-   updateUserCoverImage , getUserChannelProfile  , getWatchHistory }
+   updateUserCoverImage , getUserChannelProfile  , getWatchHistory , getAllUsers }
