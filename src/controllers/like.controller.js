@@ -142,13 +142,80 @@ const toggleTweetLike = asyncHandler(async (req, res) => {
 )
 
 const getLikedVideos = asyncHandler(async (req, res) => {
-    //TODO: get all liked videos
-    const allLikedVideos = Video.aggregate([
+  // Check if user exists
+  const user = req.user._id;
+  if (!user) {
+      throw new ApiError(400, "User not found");
+  }
+
+  // Fetch liked videos using aggregation
+  const allLikedVideos = await Like.aggregate([
       {
-        
-      }
-    ])
-})
+          $match: {
+              likedBy: new mongoose.Types.ObjectId(user), // Match videos liked by the user
+              video: { $ne: null }, // Exclude null videos
+          },
+      },
+      {
+          $lookup: {
+              from: "videos",
+              localField: "video",
+              foreignField: "_id",
+              as: "allLikedVideos",
+              pipeline: [
+                  {
+                      $project: {
+                          // Include only necessary fields, excluding createdAt and updatedAt
+                          _id: 1,
+                          videoFile: 1,
+                          thumbnail: 1,
+                          title: 1,
+                          description: 1,
+                          duration: 1,
+                          views: 1,
+                          owner: 1, // Keep this for the inner lookup
+                      },
+                  },
+                  {
+                      $lookup: {
+                          from: "users",
+                          localField: "owner",
+                          foreignField: "_id",
+                          as: "VideoOwner",
+                          pipeline: [
+                              {
+                                  $project: {
+                                      // Include only necessary user fields
+                                      fullname: 1,
+                                      username: 1,
+                                      avatar: 1,
+                                  },
+                              },
+                          ],
+                      },
+                  },
+              ],
+          },
+      },
+      {
+          $addFields: {
+              allLikedVideocount: {
+                  $size: "$allLikedVideos", // Add a count of liked videos
+              },
+          },
+      },
+  ]);
+
+  // Handle errors or success
+  if (!allLikedVideos) {
+      throw new ApiError(500, "Internal server error, can't fetch liked videos");
+  }
+
+  return res
+      .status(200)
+      .json(new ApiResponse(200, allLikedVideos, "Fetched all liked videos successfully😎"));
+});
+
 
 export {
     toggleCommentLike,
@@ -156,3 +223,5 @@ export {
     toggleVideoLike,
     getLikedVideos
 }
+
+
