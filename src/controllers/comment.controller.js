@@ -61,39 +61,42 @@ const getVideoComments = asyncHandler(async (req, res) => {
                   avatar: 1,
                 },
               },
-            
+            ]
+          },
+        },
+        {
+          $lookup: {
+            from: "likes",
+            localField: "_id",
+            foreignField: "comment",
+            as: "commentLikes",
+            pipeline: [
+              {
+                $project: {
+                  likedBy: 1,
+                },
+              },
               {
                 $lookup: {
-                  from: "likes",
-                  localField: "_id",
-                  foreignField: "comment",
-                  as: "commentLikes",
+                  from: "users",
+                  localField: "likedBy",
+                  foreignField: "_id",
+                  as: "commentLikedByUsers",
                   pipeline: [
                     {
                       $project: {
-                        likedBy: 1,
-                      },
-                    },
-                    {
-                      $lookup: {
-                        from: "users",
-                        localField: "likedBy",
-                        foreignField: "_id",
-                        as: "commentLikedByUsers",
-                        pipeline: [
-                          {
-                            $project: {
-                              fullname: 1,
-                              username: 1,
-                              avatar: 1,
-                            },
-                          },
-                        ],
+                        fullname: 1,
+                        username: 1,
+                        avatar: 1,
                       },
                     },
                   ],
                 },
               },
+            ],
+          },
+        },
+              /////
               {
                 $addFields: {
                   commentLikesCount: {
@@ -108,9 +111,7 @@ const getVideoComments = asyncHandler(async (req, res) => {
                   },
                 },
               },
-            ],
-          },
-        },
+            
         {
           $skip: (page - 1) * limit, 
         },

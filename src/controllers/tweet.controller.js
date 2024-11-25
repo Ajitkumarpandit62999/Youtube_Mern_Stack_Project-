@@ -41,10 +41,66 @@ const createTweet = asyncHandler(async (req, res) => {
         },
       },
       {
+        $lookup: {
+          from: "users",
+          localField: "owner",
+          foreignField: "_id",
+          as: "TweetOwner",
+          pipeline: [
+            {
+              $project: {
+                fullname: 1,
+                username: 1,
+                avatar: 1,
+              },
+            },
+          ]
+        },
+      },
+      {
+        $lookup: {
+          from: "likes",
+          localField: "_id",
+          foreignField: "tweet",
+          as: "TweetLikes",
+          pipeline: [
+            {
+              $project: {
+                likedBy: 1,
+              },
+            },
+            {
+              $lookup: {
+                from: "users",
+                localField: "likedBy",
+                foreignField: "_id",
+                as: "TweetLikedByUsers",
+                pipeline: [
+                  {
+                    $project: {
+                      fullname: 1,
+                      username: 1,
+                      avatar: 1,
+                    },
+                  },
+                ],
+              },
+            },
+          ],
+        },
+      },
+      {
         $addFields: {
           tweetLikes: {
             $size: "$tweetLikes",
-          }
+          },
+          hasUserLikedTweet: {
+            $cond: {
+              if: { $in: [req.user?._id, "$TweetLikes.likedBy"] },
+              then: true,
+              else: false,
+            },
+          },
         },
       },
     ]);

@@ -8,6 +8,7 @@ import {asyncHandler} from "../utils/asyncHandler.js"
 
 const toggleSubscription = asyncHandler(async (req, res) => {
     const { channelId } = req.params;
+    let message
     // TODO: toggle subscription
     if (!channelId) throw new ApiError(400, "Invalid Channel Link");
   
@@ -25,6 +26,7 @@ const toggleSubscription = asyncHandler(async (req, res) => {
     );
     if (isSubscribedToChannel) {
       await Subscription.findByIdAndDelete(isSubscribedToChannel._id);
+      message="unsubscribed sucessfully"
     } else {
       const subscribeToChannel = await Subscription.create({
         subscriber: req.user._id,
@@ -32,10 +34,12 @@ const toggleSubscription = asyncHandler(async (req, res) => {
       });
       if (!subscribeToChannel)
         throw new ApiError(500, "Failed to subscribe to channel");
+      message="Successfully subscribed"
+
     }
   
     return res.status(200).json(
-      new ApiResponse( 200 , fetchedChannel , "Successfully subscribed/unsubscribed to channel" )
+      new ApiResponse( 200 , fetchedChannel , message )
     );
   });
   
